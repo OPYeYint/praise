@@ -1,0 +1,24 @@
+$kind: collection
+name: Praise API
+description: >-
+  Local calls for the Praise gratitude API on http://localhost:8082.
+  Set googleIdToken, then run the collection from top to bottom.
+  Sign-in stores accessToken. Create stores entryId.
+variables:
+  - key: baseUrl
+    value: 'http://localhost:8082'
+    description: Running Praise API.
+  - key: googleIdToken
+    value: ''
+    description: Google ID token. Paste this before Sign in with Google. It is not the app JWT.
+  - key: accessToken
+    value: ''
+    description: Filled by Sign in with Google.
+  - key: entryId
+    value: ''
+    description: Filled by Create gratitude.
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{accessToken}}'

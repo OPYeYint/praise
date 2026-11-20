@@ -1,0 +1,30 @@
+$kind: http-request
+name: Blank title
+method: POST
+url: '{{baseUrl}}/api/gratitudes'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "  ",
+      "content": "Body"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 400", function () {
+          pm.response.to.have.status(400);
+      });
+      pm.test("errors lists the title field", function () {
+          const body = pm.response.json();
+          pm.expect(body.status).to.eql(400);
+          pm.expect(body.detail).to.eql("Request validation failed");
+          pm.expect(body.errors).to.be.an("array").that.is.not.empty;
+          pm.expect(body.errors.some((error) => error.field === "title")).to.eql(true);
+      });
+examples: './.resources/blank-title.resources/examples'

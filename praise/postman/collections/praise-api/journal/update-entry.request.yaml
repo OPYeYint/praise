@@ -1,0 +1,36 @@
+$kind: http-request
+name: Update entry
+method: PUT
+url: '{{baseUrl}}/api/gratitudes/:id'
+order: 5000
+pathVariables:
+  - key: id
+    value: '{{entryId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "entryDate": "2026-10-28",
+      "title": "Morning",
+      "content": "Quiet coffee and a walk",
+      "moodTag": "grateful"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test("updates text and keeps the same id", function () {
+          pm.expect(String(body.id)).to.eql(pm.collectionVariables.get("entryId"));
+          pm.expect(body.title).to.eql("Morning");
+          pm.expect(body.content).to.eql("Quiet coffee and a walk");
+          pm.expect(body.moodTag).to.eql("grateful");
+          pm.expect(body.entryDate).to.eql("2026-10-28");
+      });
+examples: './.resources/update-entry.resources/examples'

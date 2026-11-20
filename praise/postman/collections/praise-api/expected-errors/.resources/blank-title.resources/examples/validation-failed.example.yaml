@@ -1,0 +1,28 @@
+$kind: http-example
+name: Validation failed
+order: 1000
+request:
+  url: '{{baseUrl}}/api/gratitudes'
+  method: POST
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    - key: Content-Type
+      value: application/problem+json
+  body:
+    type: json
+    content: |-
+      {
+        "type": "about:blank",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "Request validation failed",
+        "instance": "/api/gratitudes",
+        "errors": [
+          {
+            "field": "title",
+            "message": "must not be blank"
+          }
+        ]
+      }

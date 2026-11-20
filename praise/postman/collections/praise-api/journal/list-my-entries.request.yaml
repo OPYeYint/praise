@@ -1,0 +1,20 @@
+$kind: http-request
+name: List my entries
+method: GET
+url: '{{baseUrl}}/api/gratitudes'
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test("returns an array that includes the created entry", function () {
+          pm.expect(body).to.be.an("array");
+          const created = body.find((entry) => String(entry.id) === pm.collectionVariables.get("entryId"));
+          pm.expect(created).to.be.an("object");
+          pm.expect(created.title).to.eql("Morning");
+      });
+examples: './.resources/list-my-entries.resources/examples'

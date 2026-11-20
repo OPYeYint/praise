@@ -1,0 +1,34 @@
+$kind: http-request
+name: Sign in with Google
+method: POST
+url: '{{baseUrl}}/api/auth/google'
+order: 1000
+auth:
+  type: noauth
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "idToken": "{{googleIdToken}}"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test("returns our JWT and the user", function () {
+          pm.expect(body.token).to.be.a("string").and.not.empty;
+          pm.expect(body.tokenType).to.eql("Bearer");
+          pm.expect(body.expiresAt).to.be.a("string");
+          pm.expect(body.user.id).to.be.a("number");
+          pm.expect(body.user.email).to.be.a("string").and.not.empty;
+          pm.expect(body.user.displayName).to.be.a("string").and.not.empty;
+      });
+      pm.collectionVariables.set("accessToken", body.token);
+examples: './.resources/sign-in-with-google.resources/examples'

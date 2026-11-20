@@ -1,0 +1,22 @@
+$kind: http-example
+name: Rejected
+order: 1000
+request:
+  url: '{{baseUrl}}/api/auth/google'
+  method: POST
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    - key: Content-Type
+      value: application/problem+json
+  body:
+    type: json
+    content: |-
+      {
+        "type": "about:blank",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "Google sign-in was rejected",
+        "instance": "/api/auth/google"
+      }

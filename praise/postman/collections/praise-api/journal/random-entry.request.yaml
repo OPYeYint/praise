@@ -1,0 +1,19 @@
+$kind: http-request
+name: Random entry
+method: GET
+url: '{{baseUrl}}/api/gratitudes/random'
+order: 4000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 200 when the journal has entries", function () {
+          pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test("returns one entry", function () {
+          pm.expect(body.id).to.be.a("number");
+          pm.expect(body.title).to.be.a("string").and.not.empty;
+          pm.expect(body.content).to.be.a("string").and.not.empty;
+      });
+examples: './.resources/random-entry.resources/examples'

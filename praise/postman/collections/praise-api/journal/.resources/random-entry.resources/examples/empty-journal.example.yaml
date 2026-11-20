@@ -1,0 +1,12 @@
+$kind: http-example
+name: Empty journal
+order: 2000
+request:
+  url: '{{baseUrl}}/api/gratitudes/random'
+  method: GET
+response:
+  statusCode: 204
+  statusText: No Content
+  body:
+    type: text
+    content: ''

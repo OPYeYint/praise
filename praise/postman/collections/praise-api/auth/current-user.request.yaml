@@ -1,0 +1,19 @@
+$kind: http-request
+name: Current user
+method: GET
+url: '{{baseUrl}}/api/auth/me'
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test("returns id, email, and display name", function () {
+          pm.expect(body.id).to.be.a("number");
+          pm.expect(body.email).to.be.a("string").and.not.empty;
+          pm.expect(body.displayName).to.be.a("string").and.not.empty;
+      });
+examples: './.resources/current-user.resources/examples'

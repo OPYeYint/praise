@@ -1,0 +1,22 @@
+$kind: http-example
+name: Not found
+order: 1000
+request:
+  url: '{{baseUrl}}/api/gratitudes/1'
+  method: GET
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    - key: Content-Type
+      value: application/problem+json
+  body:
+    type: json
+    content: |-
+      {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Gratitude entry 1 was not found",
+        "instance": "/api/gratitudes/1"
+      }

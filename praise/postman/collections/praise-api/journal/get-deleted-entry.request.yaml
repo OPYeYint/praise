@@ -1,0 +1,21 @@
+$kind: http-request
+name: Get deleted entry
+method: GET
+url: '{{baseUrl}}/api/gratitudes/:id'
+order: 7000
+pathVariables:
+  - key: id
+    value: '{{entryId}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 404", function () {
+          pm.response.to.have.status(404);
+      });
+      pm.test("problem detail names the missing entry", function () {
+          const body = pm.response.json();
+          pm.expect(body.status).to.eql(404);
+          pm.expect(body.detail).to.include("was not found");
+      });
+examples: './.resources/get-deleted-entry.resources/examples'

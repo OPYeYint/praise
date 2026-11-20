@@ -1,0 +1,19 @@
+$kind: http-request
+name: Delete entry
+method: DELETE
+url: '{{baseUrl}}/api/gratitudes/:id'
+order: 6000
+pathVariables:
+  - key: id
+    value: '{{entryId}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 204", function () {
+          pm.response.to.have.status(204);
+      });
+      pm.test("body is empty", function () {
+          pm.expect(pm.response.text()).to.eql("");
+      });
+examples: './.resources/delete-entry.resources/examples'

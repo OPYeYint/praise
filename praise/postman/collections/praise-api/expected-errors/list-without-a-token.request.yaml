@@ -1,0 +1,20 @@
+$kind: http-request
+name: List without a token
+method: GET
+url: '{{baseUrl}}/api/gratitudes'
+order: 1000
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 401", function () {
+          pm.response.to.have.status(401);
+      });
+      pm.test("authentication is required", function () {
+          const body = pm.response.json();
+          pm.expect(body.status).to.eql(401);
+          pm.expect(body.detail).to.eql("Authentication is required");
+      });
+examples: './.resources/list-without-a-token.resources/examples'

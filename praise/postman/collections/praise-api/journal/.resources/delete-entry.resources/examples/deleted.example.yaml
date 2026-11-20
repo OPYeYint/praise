@@ -1,0 +1,12 @@
+$kind: http-example
+name: Deleted
+order: 1000
+request:
+  url: '{{baseUrl}}/api/gratitudes/1'
+  method: DELETE
+response:
+  statusCode: 204
+  statusText: No Content
+  body:
+    type: text
+    content: ''

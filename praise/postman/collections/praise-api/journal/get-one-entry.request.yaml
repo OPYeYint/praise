@@ -1,0 +1,21 @@
+$kind: http-request
+name: Get one entry
+method: GET
+url: '{{baseUrl}}/api/gratitudes/:id'
+order: 3000
+pathVariables:
+  - key: id
+    value: '{{entryId}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      const body = pm.response.json();
+      pm.test("returns the owned entry", function () {
+          pm.expect(String(body.id)).to.eql(pm.collectionVariables.get("entryId"));
+          pm.expect(body.content).to.eql("Quiet coffee");
+      });
+examples: './.resources/get-one-entry.resources/examples'

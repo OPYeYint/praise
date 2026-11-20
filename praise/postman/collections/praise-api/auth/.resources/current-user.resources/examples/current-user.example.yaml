@@ -1,0 +1,20 @@
+$kind: http-example
+name: Current user
+order: 1000
+request:
+  url: '{{baseUrl}}/api/auth/me'
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1,
+        "email": "ada@example.com",
+        "displayName": "Ada"
+      }

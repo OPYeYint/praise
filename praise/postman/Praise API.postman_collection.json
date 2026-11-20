@@ -1,0 +1,413 @@
+{
+  "info": {
+    "name": "Praise API",
+    "description": "Local calls for the Praise gratitude API on http://localhost:8082. Set googleIdToken, then run the collection from top to bottom. Sign-in stores accessToken. Create stores entryId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8082" },
+    { "key": "googleIdToken", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "entryId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{accessToken}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign in with Google",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('returns our JWT and the user', function () {",
+                  "    pm.expect(body.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.tokenType).to.eql('Bearer');",
+                  "    pm.expect(body.expiresAt).to.be.a('string');",
+                  "    pm.expect(body.user.id).to.be.a('number');",
+                  "    pm.expect(body.user.email).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.user.displayName).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('accessToken', body.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"{{googleIdToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/auth/google",
+            "description": "Public. Paste a Google ID token into the googleIdToken collection variable first. The test script saves body.token as accessToken."
+          }
+        },
+        {
+          "name": "Current user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('returns id, email, and display name', function () {",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "    pm.expect(body.email).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.displayName).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Needs Authorization: Bearer accessToken. The user id comes from the JWT, not from the URL."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Journal",
+      "item": [
+        {
+          "name": "Create gratitude",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('returns the saved entry', function () {",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "    pm.expect(body.title).to.eql('Morning');",
+                  "    pm.expect(body.content).to.eql('Quiet coffee');",
+                  "    pm.expect(body.moodTag).to.eql('calm');",
+                  "    pm.expect(body.entryDate).to.be.a('string');",
+                  "    pm.expect(body.createdAt).to.be.a('string');",
+                  "});",
+                  "pm.test('Location header points at the new entry', function () {",
+                  "    pm.expect(pm.response.headers.get('Location')).to.include('/api/gratitudes/' + body.id);",
+                  "});",
+                  "pm.collectionVariables.set('entryId', String(body.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning\",\n  \"content\": \"Quiet coffee\",\n  \"moodTag\": \"calm\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/gratitudes",
+            "description": "entryDate is optional. When it is missing, the server uses today's date in UTC. A blank moodTag is stored as null."
+          }
+        },
+        {
+          "name": "List my entries",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('returns an array that includes the created entry', function () {",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    const created = body.find((entry) => String(entry.id) === pm.collectionVariables.get('entryId'));",
+                  "    pm.expect(created).to.be.an('object');",
+                  "    pm.expect(created.title).to.eql('Morning');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gratitudes",
+            "description": "Only the signed-in user's entries, newest entryDate first."
+          }
+        },
+        {
+          "name": "Get one entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('returns the owned entry', function () {",
+                  "    pm.expect(String(body.id)).to.eql(pm.collectionVariables.get('entryId'));",
+                  "    pm.expect(body.content).to.eql('Quiet coffee');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gratitudes/{{entryId}}",
+            "description": "404 when the id is missing or belongs to another user."
+          }
+        },
+        {
+          "name": "Random entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200 when the journal has entries', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('returns one entry', function () {",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "    pm.expect(body.title).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.content).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gratitudes/random",
+            "description": "One of this user's entries. Call this before creating anything, or after deleting every row, to see 204 No Content."
+          }
+        },
+        {
+          "name": "Update entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('updates text and keeps the same id', function () {",
+                  "    pm.expect(String(body.id)).to.eql(pm.collectionVariables.get('entryId'));",
+                  "    pm.expect(body.title).to.eql('Morning');",
+                  "    pm.expect(body.content).to.eql('Quiet coffee and a walk');",
+                  "    pm.expect(body.moodTag).to.eql('grateful');",
+                  "    pm.expect(body.entryDate).to.eql('2026-10-28');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entryDate\": \"2026-10-28\",\n  \"title\": \"Morning\",\n  \"content\": \"Quiet coffee and a walk\",\n  \"moodTag\": \"grateful\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/gratitudes/{{entryId}}",
+            "description": "Replaces day, title, content, and mood. id, createdAt, and the owner stay the same."
+          }
+        },
+        {
+          "name": "Delete entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test('body is empty', function () {",
+                  "    pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/gratitudes/{{entryId}}",
+            "description": "204 when this user owns the row. 404 otherwise."
+          }
+        },
+        {
+          "name": "Get deleted entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('problem detail names the missing entry', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "    pm.expect(body.detail).to.include('was not found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gratitudes/{{entryId}}",
+            "description": "Run after Delete entry."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expected errors",
+      "item": [
+        {
+          "name": "List without a token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('authentication is required', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "    pm.expect(body.detail).to.eql('Authentication is required');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gratitudes",
+            "description": "Same 401 for a missing token, a token that is not Bearer, or a bad JWT."
+          }
+        },
+        {
+          "name": "Rejected Google token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"not-a-real-google-token\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/auth/google",
+            "description": "Google rejected the ID token."
+          }
+        },
+        {
+          "name": "Blank title",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errors lists the title field', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body.detail).to.eql('Request validation failed');",
+                  "    pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "    pm.expect(body.errors.some((error) => error.field === 'title')).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"  \",\n  \"content\": \"Body\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/gratitudes",
+            "description": "Needs a valid accessToken from Sign in. Title and content must be non-blank. Title max 200, content max 4000, moodTag max 50."
+          }
+        }
+      ]
+    }
+  ]
+}

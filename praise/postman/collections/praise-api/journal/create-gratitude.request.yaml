@@ -1,0 +1,37 @@
+$kind: http-request
+name: Create gratitude
+method: POST
+url: '{{baseUrl}}/api/gratitudes'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Morning",
+      "content": "Quiet coffee",
+      "moodTag": "calm"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("status is 201", function () {
+          pm.response.to.have.status(201);
+      });
+      const body = pm.response.json();
+      pm.test("returns the saved entry", function () {
+          pm.expect(body.id).to.be.a("number");
+          pm.expect(body.title).to.eql("Morning");
+          pm.expect(body.content).to.eql("Quiet coffee");
+          pm.expect(body.moodTag).to.eql("calm");
+          pm.expect(body.entryDate).to.be.a("string");
+          pm.expect(body.createdAt).to.be.a("string");
+      });
+      pm.test("Location header points at the new entry", function () {
+          pm.expect(pm.response.headers.get("Location")).to.include("/api/gratitudes/" + body.id);
+      });
+      pm.collectionVariables.set("entryId", String(body.id));
+examples: './.resources/create-gratitude.resources/examples'
